@@ -43,6 +43,7 @@ async def ingest_events(
                     event_type=EventType.activity,
                     timestamp=event.timestamp,
                     event=event.event,
+                    username=event.username,
                 )
             elif event.__class__.__name__ == "HeartbeatEvent":
                 db_event = Event(
@@ -50,6 +51,7 @@ async def ingest_events(
                     device_id=device.device_id,
                     event_type=EventType.heartbeat,
                     timestamp=event.timestamp,
+                    username=event.username,
                 )
             elif event.__class__.__name__ == "WindowEvent":
                 db_event = Event(
@@ -61,6 +63,7 @@ async def ingest_events(
                     duration=event.duration,
                     start_time=event.start_time,
                     end_time=event.end_time,
+                    username=event.username,
                 )
             else:
                 continue

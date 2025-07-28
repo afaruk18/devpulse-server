@@ -43,6 +43,7 @@ class Event(Base):
     device_id = Column(String(36), ForeignKey("devices.device_id"), nullable=False, index=True)
     event_type = Column(Enum(EventType), nullable=False)
     timestamp = Column(DateTime, nullable=False)
+    username = Column(String(255), nullable=False, index=True)  # Added username column
     # ActivityEvent fields
     event = Column(String(255), nullable=True)
     # WindowEvent fields
