@@ -62,7 +62,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None, neve
 @router.post("/signup")
 async def signup(request: SignupRequest, client: Annotated[CredentialClient, Depends(CredentialClient)]) -> dict[str, bool]:
     """Sign up a new user with device validation."""
-    status = client.enroll_credential(request.username, request.password, request.user_email, request.device_fingerprint)
+    status = await client.enroll_credential(request.username, request.password, request.user_email, request.device_fingerprint)
     return {"status": status}
 
 
@@ -73,7 +73,7 @@ async def login(client: Annotated[CredentialClient, Depends(CredentialClient)], 
     # Create device fingerprint with only MAC address
     device_fingerprint = DeviceFingerprint(mac_address=login_data.mac_address)
     # Authenticate user with device validation
-    user = client.authenticate_user(login_data.username, login_data.password, device_fingerprint)
+    user = await client.authenticate_user(login_data.username, login_data.password, device_fingerprint)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
