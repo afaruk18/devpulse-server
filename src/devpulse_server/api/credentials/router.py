@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic_settings import BaseSettings
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from devpulse_server.api.credentials.models.credential_models import DeviceFingerprint, LoginRequest, SignupRequest
 from devpulse_server.credentials.credential import CredentialClient
@@ -91,14 +93,18 @@ async def login(client: Annotated[CredentialClient, Depends(CredentialClient)], 
     return {"access_token": access_token, "token_type": "bearer", "expires": not login_data.never_expires}
 
 
-async def get_current_user_and_device(token: Annotated[str, Depends(oauth2_scheme)], db=Depends(get_db)) -> tuple[User, Device]:
+async def get_current_user_and_device(token: Annotated[str, Depends(oauth2_scheme)], db: AsyncSession = Depends(get_db)) -> tuple[User, Device]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload.get("exp") is not None:
             if payload.get("exp") < datetime.now(timezone.utc).timestamp():
                 raise HTTPException(status_code=401, detail="Token expired")
-        user = db.query(User).filter(User.username == payload["sub"]).first()
-        device = db.query(Device).filter(Device.mac_address == payload.get("device_mac")).first()
+        user = (await db.execute(
+            select(User).where(User.username == payload["sub"]))
+        ).scalars().first()
+        device = (await db.execute(
+            select(Device).where(Device.mac_address == payload.get("device_mac")))
+        ).scalars().first()
         if not user or device.user_id != user.user_id:
             raise HTTPException(status_code=403, detail="Invalid credentials or device")
         return user, device
