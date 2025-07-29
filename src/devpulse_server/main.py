@@ -4,9 +4,10 @@ import uvicorn
 from fastapi import FastAPI
 from loguru import logger
 
+import asyncio
+from devpulse_server.database.connection import create_tables, drop_tables, async_engine, Base
 from devpulse_server.api.credentials.router import router as credentials_router
 from devpulse_server.api.ingest.router import router as ingest_router
-from devpulse_server.database.connection import create_tables, drop_tables, engine
 from devpulse_server.logger.logger_setup import setup_logger
 
 
@@ -21,9 +22,15 @@ async def lifespan(app: FastAPI):
     logger.info("Server connection established")
 
     yield  # Application runs here
-    
-    engine.dispose()
 
+    # Example: Drop tables asynchronously
+    async def _drop():
+        async with async_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+    # Uncomment to drop tables on shutdown:
+    # asyncio.run(_drop())
+
+    await async_engine.dispose()
     logger.info("Database engine disposed")
 
 
