@@ -30,18 +30,12 @@ async def get_db() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         yield session
 
-def create_tables() -> None:
+async def create_tables() -> None:
     """Create all tables in the database."""
-    import asyncio
-    async def _create():
-        async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-    asyncio.run(_create())
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-def drop_tables() -> None:
+async def drop_tables() -> None:
     """Drop all tables in the database."""
-    import asyncio
-    async def _drop():
-        async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-    asyncio.run(_drop())
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)

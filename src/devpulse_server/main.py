@@ -13,22 +13,16 @@ from devpulse_server.logger.logger_setup import setup_logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan context manager."""
-    # Startup: Create all tables
     setup_logger()
     logger.info("Creating database tables...")
-    create_tables()
+    await create_tables()
     logger.info("Database tables created successfully")
     logger.info("Server connection established")
 
     yield  # Application runs here
 
-    # Example: Drop tables asynchronously
-    async def _drop():
-        async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
     # Uncomment to drop tables on shutdown:
-    # asyncio.run(_drop())
+    # await drop_tables()
 
     await async_engine.dispose()
     logger.info("Database engine disposed")
